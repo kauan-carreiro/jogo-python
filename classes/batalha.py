@@ -1,9 +1,3 @@
-"""
-Classe principal da batalha: orquestra o sorteio de perguntas, a leitura das
-respostas dos dois jogadores, o cálculo de dano, as animações dos personagens
-e a interface visual exibida durante o combate.
-"""
-
 import os
 import random
 from typing import List, Optional
@@ -40,14 +34,10 @@ ESTADO_RODADA_AGUARDANDO_RESPOSTAS = "aguardando_respostas"
 ESTADO_RODADA_EXIBINDO_RESULTADO = "exibindo_resultado"
 ESTADO_RODADA_FIM_DE_BATALHA = "fim_de_batalha"
 
-# Pesos de sorteio de dificuldade: a IA balanceou para que perguntas fáceis
-# sejam um pouco mais frequentes, deixando o ritmo da partida mais justo.
+# Pesos de sorteio de dificuldade
 PESOS_DIFICULDADE = {"facil": 0.40, "normal": 0.35, "dificil": 0.25}
 
-
 class Batalha:
-    """Controla todo o ciclo de uma partida: rodadas, dano, animações e interface."""
-
     def __init__(
         self,
         tela: pygame.Surface,
@@ -130,7 +120,6 @@ class Batalha:
                     break
 
         if pergunta_sorteada is None:
-            # Acabaram as perguntas disponíveis: a batalha é encerrada com o placar atual.
             self._finalizar_batalha()
             return
 
@@ -429,3 +418,8 @@ class Batalha:
         if self.estado_rodada != ESTADO_RODADA_FIM_DE_BATALHA:
             self._desenhar_cronometro_e_status()
             self._desenhar_pergunta_e_alternativas()
+
+    def finalizar_batalha_antecipadamente(self) -> None:
+        """Finaliza a batalha por ação do usuário (ex: ESC)."""
+        if not self.batalha_finalizada:
+            self._finalizar_batalha()
