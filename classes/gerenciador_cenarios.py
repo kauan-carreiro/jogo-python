@@ -1,9 +1,3 @@
-"""
-Responsável por carregar os cenários de batalha e sortear um deles
-aleatoriamente no início de cada partida. Caso as imagens não existam,
-gera fundos em degradê como placeholder.
-"""
-
 import os
 import random
 from typing import List, Tuple

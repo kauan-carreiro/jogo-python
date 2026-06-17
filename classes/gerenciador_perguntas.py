@@ -1,8 +1,3 @@
-"""
-Responsável por carregar as perguntas do arquivo perguntas.json e sortear
-questões durante a batalha, evitando repetição na mesma partida.
-"""
-
 import json
 import random
 from typing import Dict, List, Optional, Set, Tuple
@@ -39,13 +34,6 @@ class GerenciadorPerguntas:
     def sortear_pergunta(
         self, materia: str, dificuldade: str, descritor: Optional[str] = None
     ) -> Optional[Pergunta]:
-        """
-        Sorteia uma pergunta aleatória de uma matéria/dificuldade específica,
-        evitando repetir perguntas já usadas na batalha atual.
-
-        Se 'descritor' não for informado, um descritor aleatório entre os
-        disponíveis para a matéria é escolhido automaticamente.
-        """
         descritores_disponiveis = [descritor] if descritor else self._listar_descritores(materia)
         if not descritores_disponiveis:
             return None
@@ -81,11 +69,6 @@ class GerenciadorPerguntas:
         return None
 
     def sortear_pergunta_para_modo(self, modo: str, dificuldade: str) -> Optional[Pergunta]:
-        """
-        Sorteia uma pergunta considerando o modo de jogo escolhido no menu
-        (matematica, portugues ou mista). No modo mista, a matéria de cada
-        pergunta também é sorteada aleatoriamente.
-        """
         if modo == "mista":
             materia_escolhida = random.choice(["matematica", "portugues"])
         else:

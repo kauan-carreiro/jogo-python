@@ -1,7 +1,3 @@
-"""
-Classe que representa uma única pergunta de múltipla escolha do jogo.
-"""
-
 from typing import Dict
 
 

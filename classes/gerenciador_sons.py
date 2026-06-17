@@ -1,9 +1,3 @@
-"""
-Responsável por carregar e reproduzir efeitos sonoros e música de fundo,
-sem quebrar o jogo caso os arquivos de áudio não existam ou o ambiente
-não possua dispositivo de som disponível.
-"""
-
 import os
 from typing import Dict
 

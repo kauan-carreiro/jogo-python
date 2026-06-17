@@ -1,8 +1,3 @@
-"""
-Responsável por calcular o dano causado em uma resposta, considerando
-o acerto, a dificuldade da pergunta e a velocidade da resposta.
-"""
-
 from classes.constantes import (
     BONUS_PRIMEIRA_RESPOSTA_CORRETA,
     FAIXA_TEMPO_MEDIA,
@@ -16,7 +11,6 @@ class CalculadoraDano:
 
     @staticmethod
     def _obter_faixa_de_tempo(tempo_resposta: float) -> str:
-        """Classifica o tempo de resposta em 'rapida', 'media' ou 'lenta'."""
         if tempo_resposta <= FAIXA_TEMPO_RAPIDA:
             return "rapida"
         if tempo_resposta <= FAIXA_TEMPO_MEDIA:
@@ -30,18 +24,6 @@ class CalculadoraDano:
         tempo_resposta: float,
         foi_o_primeiro_a_acertar: bool = False,
     ) -> int:
-        """
-        Calcula o dano de uma resposta.
-
-        Parâmetros:
-            resposta_correta: se a alternativa escolhida estava certa.
-            dificuldade: "facil", "normal" ou "dificil".
-            tempo_resposta: tempo em segundos que o jogador levou para responder.
-            foi_o_primeiro_a_acertar: concede um pequeno bônus de dano extra,
-                pois "quem responde primeiro corretamente recebe o bônus máximo".
-
-        Retorna o valor de dano (inteiro). Uma resposta errada nunca causa dano.
-        """
         if not resposta_correta:
             return 0
 

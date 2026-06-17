@@ -1,11 +1,3 @@
-"""
-Arquivo de constantes do jogo Batalha do Conhecimento.
-
-Centraliza valores fixos (telas, cores, caminhos, balanceamento de combate
-e teclas) para facilitar ajustes futuros sem precisar alterar a lógica
-das demais classes.
-"""
-
 import os
 
 import pygame

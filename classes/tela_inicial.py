@@ -1,7 +1,3 @@
-"""
-Tela de abertura do jogo, exibida antes da história e do menu principal.
-"""
-
 import pygame
 
 from classes.constantes import ALTURA_TELA, COR_BRANCO, COR_DESTAQUE, COR_FUNDO_PADRAO, LARGURA_TELA

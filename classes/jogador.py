@@ -1,12 +1,3 @@
-"""
-Representa o estado e as estatísticas de um jogador durante a batalha.
-
-Esta classe não lida com desenho na tela nem com sprites: ela é puramente
-um modelo de dados e regras de negócio do jogador (vida, pontuação,
-estatísticas de tempo de resposta etc.), seguindo o princípio de
-responsabilidade única da POO.
-"""
-
 from typing import Dict, List, Optional
 
 

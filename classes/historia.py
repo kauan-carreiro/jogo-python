@@ -1,7 +1,3 @@
-"""
-Tela que narra a história inicial do jogo, exibida antes do menu principal.
-"""
-
 from typing import List
 
 import pygame

@@ -1,12 +1,3 @@
-"""
-Responsável por carregar e gerenciar os quadros (sprites) de animação dos
-personagens: 3 quadros de idle, 1 de ataque e 1 de dano.
-
-Caso os arquivos de imagem não existam em assets/personagens/, o jogo
-continua funcionando normalmente: superfícies de placeholder coloridas são
-geradas automaticamente no lugar das imagens ausentes.
-"""
-
 import os
 from typing import List, Tuple
 

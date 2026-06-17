@@ -1,9 +1,3 @@
-"""
-Classe do personagem visual, responsável por exibir as animações (idle,
-ataque e dano) durante a batalha. Utiliza pygame.sprite.Sprite, conforme
-exigido, para facilitar a atualização e a renderização do personagem.
-"""
-
 from typing import Tuple
 
 import pygame
