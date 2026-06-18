@@ -4,7 +4,7 @@
 
 ---
 
-## Docs de comentários sobre o projeto
+## Documentos de comentários sobre o projeto
 Daniel Hardman: https://docs.google.com/document/d/1UiNBWj87X-gdmjlYIDYjL0_pY6zpNgiLQH3rtrhYAFk/edit?usp=sharing
 
 ## Sobre o projeto
