@@ -47,6 +47,9 @@ TECLAS_JOGADOR_2 = {
     pygame.K_p: "D",
 }
 
+# Tecla que abre/fecha a tela de controles durante a batalha.
+TECLA_TELA_CONTROLES = pygame.K_F1
+
 # ===================== CONFIGURAÇÕES DE COMBATE =====================
 VIDA_INICIAL = 100
 

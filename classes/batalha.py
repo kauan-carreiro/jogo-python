@@ -26,12 +26,14 @@ from classes.constantes import (
     TEMPO_CONTAGEM_REGRESSIVA,
     TEMPO_EXIBICAO_GO,
     TEMPO_EXIBICAO_DANO,
+    TECLA_TELA_CONTROLES,
 )
 from classes.gerenciador_cenarios import GerenciadorCenarios
 from classes.gerenciador_perguntas import GerenciadorPerguntas
 from classes.gerenciador_sons import GerenciadorSons
 from classes.jogador import Jogador
 from classes.personagem import Personagem, ESTADO_ERRO
+from classes.tela_controles import TelaControles
 
 # Estados da rodada (adicionamos CONTAGEM)
 ESTADO_RODADA_CONTAGEM = "contagem"
@@ -113,6 +115,14 @@ class Batalha:
 
         # --- ÁUDIO ---
         self.gerenciador_sons.tocar_musica_de_batalha()
+
+        # --- TELA DE CONTROLES (overlay com as teclas de cada jogador) ---
+        self.tela_controles = TelaControles(self.tela)
+        # Antes da primeira rodada de toda batalha, mostramos a tela de
+        # controles automaticamente. Ela só fecha quando o jogador pressionar
+        # a tecla TECLA_TELA_CONTROLES (F1) — mesma tecla usada para
+        # abri-la/fechá-la a qualquer momento durante a batalha.
+        self.mostrando_tela_controles = True
 
         # Inicia a primeira rodada com contagem
         self._iniciar_nova_rodada()
@@ -213,8 +223,25 @@ class Batalha:
         self.mensagens.append((texto, (x, y), cor, TEMPO_EXIBICAO_DANO))
 
     def processar_evento(self, evento: pygame.event.Event) -> None:
-        """Processa eventos de teclado para a seleção de alternativas pelos dois jogadores."""
-        if evento.type != pygame.KEYDOWN or self.estado_rodada != ESTADO_RODADA_AGUARDANDO_RESPOSTAS:
+        """Processa eventos de teclado: abertura/fechamento da tela de
+        controles e seleção de alternativas pelos dois jogadores."""
+        if evento.type != pygame.KEYDOWN:
+            return
+
+        # A tecla de controles funciona como um interruptor (toggle) e tem
+        # prioridade sobre qualquer outra coisa, podendo ser usada em
+        # qualquer momento da batalha (inclusive durante a contagem ou
+        # exibição de resultado).
+        if evento.key == TECLA_TELA_CONTROLES:
+            self.mostrando_tela_controles = not self.mostrando_tela_controles
+            return
+
+        # Enquanto a tela de controles estiver aberta, o jogo fica pausado:
+        # nenhuma resposta é processada.
+        if self.mostrando_tela_controles:
+            return
+
+        if self.estado_rodada != ESTADO_RODADA_AGUARDANDO_RESPOSTAS:
             return
 
         letra_jogador1 = self.jogador1.obter_letra_pela_tecla(evento.key)
@@ -297,6 +324,12 @@ class Batalha:
         if self.batalha_finalizada:
             return
 
+        # Enquanto a tela de controles estiver aberta (seja a exibição
+        # automática do início da batalha, seja por F1 durante o jogo),
+        # tudo fica congelado: cronômetro, animações e contagem regressiva.
+        if self.mostrando_tela_controles:
+            return
+
         self.tempo_total_batalha += tempo_decorrido
         self.grupo_personagens.update(tempo_decorrido)
 
@@ -365,6 +398,46 @@ class Batalha:
             linhas.append(linha_atual)
         return linhas
 
+    def _desenhar_texto_com_fundo(
+        self,
+        texto: str,
+        fonte: pygame.font.Font,
+        pos_x: int,
+        pos_y: int,
+        cor_texto: Tuple[int, int, int] = COR_BRANCO,
+        cor_fundo: Tuple[int, int, int, int] = (0, 0, 0, 140),
+        padding_x: int = 6,
+        padding_y: int = 3,
+        alinhado_direita: bool = False,
+        alinhado_centro: bool = False,
+    ) -> None:
+        """
+        Desenha um texto com fundo semitransparente e sombra leve, garantindo
+        boa legibilidade independentemente da cor do cenário ao fundo.
+        """
+        texto_renderizado = fonte.render(texto, True, cor_texto)
+        sombra_renderizada = fonte.render(texto, True, (0, 0, 0))
+
+        if alinhado_centro:
+            pos_final_x = pos_x - texto_renderizado.get_width() // 2
+        elif alinhado_direita:
+            pos_final_x = pos_x - texto_renderizado.get_width()
+        else:
+            pos_final_x = pos_x
+
+        caixa_fundo = pygame.Rect(
+            pos_final_x - padding_x,
+            pos_y - padding_y,
+            texto_renderizado.get_width() + padding_x * 2,
+            texto_renderizado.get_height() + padding_y * 2,
+        )
+        superficie_fundo = pygame.Surface(caixa_fundo.size, pygame.SRCALPHA)
+        superficie_fundo.fill(cor_fundo)
+        self.tela.blit(superficie_fundo, caixa_fundo.topleft)
+
+        self.tela.blit(sombra_renderizada, (pos_final_x + 1, pos_y + 1))
+        self.tela.blit(texto_renderizado, (pos_final_x, pos_y))
+
     def _desenhar_barra_de_vida(self, jogador: Jogador, pos_x: int, pos_y: int) -> None:
         largura_barra = 320
         altura_barra = 30
@@ -403,19 +476,32 @@ class Batalha:
         barra_x = pos_x if not alinhado_direita else pos_x - 320
         self._desenhar_barra_de_vida(jogador, barra_x, pos_y)
 
+        # Texto de Acertos/Erros/Último dano com fundo + sombra para alta legibilidade
         info = f"Acertos: {jogador.total_acertos}  Erros: {jogador.total_erros}  Último dano: {jogador.ultimo_dano_causado}"
-        texto_info = self.fonte_pequena.render(info, True, COR_CINZA_CLARO)
-        if alinhado_direita:
-            self.tela.blit(texto_info, (pos_x - texto_info.get_width(), pos_y + 40))
-        else:
-            self.tela.blit(texto_info, (pos_x, pos_y + 40))
+        self._desenhar_texto_com_fundo(
+            info,
+            self.fonte_pequena,
+            pos_x,
+            pos_y + 40,
+            cor_texto=COR_BRANCO,
+            alinhado_direita=alinhado_direita,
+        )
 
     def _desenhar_pergunta_e_alternativas(self) -> None:
         if self.pergunta_atual is None:
             return
 
+        # Deslocamento vertical geral do bloco de pergunta + alternativas.
+        # Aumente este valor para descer mais; diminua (ou zere) para subir.
+        DESLOCAMENTO_VERTICAL_BLOCO_PERGUNTA = 28
+
         # Caixa da pergunta
-        caixa = pygame.Rect(LARGURA_TELA // 2 - 420, 90, 840, 120)
+        caixa = pygame.Rect(
+            LARGURA_TELA // 2 - 420,
+            90 + DESLOCAMENTO_VERTICAL_BLOCO_PERGUNTA,
+            840,
+            120,
+        )
         s = pygame.Surface(caixa.size, pygame.SRCALPHA)
         s.fill((10, 10, 30, 220))
         self.tela.blit(s, caixa.topleft)
@@ -434,11 +520,9 @@ class Batalha:
 
         # Alternativas
         letras = ["A", "B", "C", "D"]
-        teclas1 = ["Q", "W", "E", "R"]
-        teclas2 = ["U", "I", "O", "P"]
         larg_alt = 300
         alt_alt = 60
-        y_alt = 200
+        y_alt = 200 + DESLOCAMENTO_VERTICAL_BLOCO_PERGUNTA
 
         for i, letra in enumerate(letras):
             coluna = i % 2
@@ -456,10 +540,6 @@ class Batalha:
                 txt = self.fonte_alternativa.render(linha, True, COR_BRANCO)
                 self.tela.blit(txt, (rect.x + 10, rect.y + 6 + j * 24))
 
-            teclas = f"P1:{teclas1[i]} / P2:{teclas2[i]}"
-            txt_teclas = self.fonte_pequena.render(teclas, True, COR_AMARELO)
-            self.tela.blit(txt_teclas, (rect.right - txt_teclas.get_width() - 8, rect.bottom - 20))
-
     def _desenhar_cronometro_e_status(self) -> None:
         # Cronômetro grande
         if self.respostas_habilitadas:
@@ -473,14 +553,28 @@ class Batalha:
         txt_cron = self.fonte_cronometro.render(texto_cron, True, cor)
         self.tela.blit(txt_cron, (LARGURA_TELA // 2 - txt_cron.get_width() // 2, 12))
 
-        # Número da pergunta
+        # Número da pergunta (com fundo + sombra para destacar sobre o cenário)
         num_pergunta = min(self.contador_perguntas_respondidas + 1, QUANTIDADE_MAXIMA_PERGUNTAS_POR_BATALHA)
-        txt_num = self.fonte_pequena.render(
+        self._desenhar_texto_com_fundo(
             f"Pergunta {num_pergunta}/{QUANTIDADE_MAXIMA_PERGUNTAS_POR_BATALHA}",
-            True,
-            COR_CINZA_CLARO,
+            self.fonte_pequena,
+            LARGURA_TELA // 2,
+            65,
+            cor_texto=COR_BRANCO,
+            alinhado_centro=True,
         )
-        self.tela.blit(txt_num, (LARGURA_TELA // 2 - txt_num.get_width() // 2, 65))
+
+        # Dica discreta de como reabrir a tela de controles a qualquer momento
+        nome_tecla_overlay = pygame.key.name(TECLA_TELA_CONTROLES).upper()
+        self._desenhar_texto_com_fundo(
+            f"{nome_tecla_overlay}: Controles",
+            self.fonte_pequena,
+            LARGURA_TELA - 20,
+            ALTURA_TELA - 32,
+            cor_texto=COR_CINZA_CLARO,
+            alinhado_direita=True,
+        )
+        
 
     def _desenhar_contagem_regressiva(self) -> None:
         """Desenha a contagem regressiva (3,2,1,GO!) no centro da tela."""
@@ -549,6 +643,10 @@ class Batalha:
         else:
             # Mostra o vencedor na tela final antes de transicionar
             self._desenhar_vencedor_final()
+
+        # A tela de controles é desenhada por último, cobrindo tudo o mais.
+        if self.mostrando_tela_controles:
+            self.tela_controles.desenhar()
 
     def finalizar_batalha_antecipadamente(self) -> None:
         """Finaliza a batalha por ação do usuário (ESC)."""
